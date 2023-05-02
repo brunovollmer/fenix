@@ -16,5 +16,5 @@ biped_build_rootfs() {
     # unpack to $ROOTFS_TEMP/tmp/reqs
     echo "Unpacking biped deps to $ROOTFS_TEMP/tmp/biped/"
     mkdir -p $ROOTFS_TEMP/tmp/biped/
-    tar -xvzf $BIPED_DEPS_PATH -C $ROOTFS_TEMP/tmp/biped/
+    tar -xzf $BIPED_DEPS_PATH -C $ROOTFS_TEMP/tmp/biped/
 }

@@ -672,8 +672,9 @@ build_rootfs() {
 	echo "==BIPED== finished chroot script"
 
 	## Logo
-	[ "$KHADAS_BOARD" = "Generic" ] || \
-		cp archives/logo/${VENDOR}/logo.img $BUILD_IMAGES
+	#[ "$KHADAS_BOARD" = "Generic" ] || \
+	#	cp archives/logo/${VENDOR}/logo.img $BUILD_IMAGES
+	cp archives/logo/biped/logo.img $BUILD_IMAGES
 
 	qemu_helper_deactivate "$ROOTFS_TEMP"
 
