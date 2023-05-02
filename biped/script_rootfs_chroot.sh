@@ -25,5 +25,7 @@ ln -s /usr/libexec/bluetooth/bluetoothd /lib/bluetooth/bluetoothd
 rm /lib/systemd/system/bluetooth.service
 cp /tmp/biped/reqs/configs/bluetooth.service /lib/systemd/system/
 
+# delete temp folder for reduce final image size
+rm -rf /tmp/biped
 # Self-deleting
 rm $0

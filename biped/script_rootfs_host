@@ -5,7 +5,7 @@ BIPED_DEPS_FILENAME="biped_deps_4_11.tar.gz"
 BIPED_DEPS_PATH="$BIPED_DOWNLOADS_PATH/$BIPED_DEPS_FILENAME"
 
 biped_build_rootfs() {
-    mkdir -p download/biped
+    mkdir -p $BIPED_DOWNLOADS_PATH
 
     # download to downloads/biped if file not exist, BIPED_DEPS_PATH
     if [ ! -f "$BIPED_DEPS_PATH" ]; then
