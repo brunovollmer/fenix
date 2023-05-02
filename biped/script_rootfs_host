@@ -1,0 +1,20 @@
+# script executed by the host (with ssh access) when the rootfs is mounted
+
+BIPED_DOWNLOADS_PATH="downloads/biped"
+BIPED_DEPS_FILENAME="biped_deps_4_11.tar.gz"
+BIPED_DEPS_PATH="$BIPED_DOWNLOADS_PATH/$BIPED_DEPS_FILENAME"
+
+biped_build_rootfs() {
+    mkdir -p download/biped
+
+    # download to downloads/biped if file not exist, BIPED_DEPS_PATH
+    if [ ! -f "$BIPED_DEPS_PATH" ]; then
+        echo "Downloading biped deps to $BIPED_DEPS_PATH"
+        wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1ks1kmslXE16RT66-YMsJckmC23CRGOU8' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1ks1kmslXE16RT66-YMsJckmC23CRGOU8" -O $BIPED_DEPS_PATH && rm -rf /tmp/cookies.txt
+    fi
+
+    # unpack to $ROOTFS_TEMP/tmp/reqs
+    echo "Unpacking biped deps to $ROOTFS_TEMP/tmp/biped/"
+    mkdir -p $ROOTFS_TEMP/tmp/biped/
+    tar -xvzf $BIPED_DEPS_PATH -C $ROOTFS_TEMP/tmp/biped/
+}
