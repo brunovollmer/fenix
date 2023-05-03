@@ -5,9 +5,9 @@ KERNEL_VER=$(uname -r)
 . /etc/os-release
 . /etc/fenix-release
 
-printf "\nWelcome to \e[0;91mFenix\x1B[0m %s %s %s\n" "$VERSION $PRETTY_NAME Linux $KERNEL_VER"
+printf "\nWelcome to \e[0;91mFenix\x1B[0m %s %s %s\n" "$VERSION $PRETTY_NAME Linux $KERNEL_VER (biped edition)"
 
-TERM=linux toilet -f standard -F metal "Khadas $BOARD"
+TERM=linux toilet -f standard -F metal "biped $BOARD"
 
 if cat /proc/cmdline | grep -q reboot_test; then
 	TERM=linux toilet -f standard -F metal "REBOOT TEST"
