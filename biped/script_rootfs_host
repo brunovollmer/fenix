@@ -3,6 +3,11 @@
 BIPED_DOWNLOADS_PATH="downloads/biped"
 BIPED_DEPS_FILENAME="biped_deps_4_11.tar.gz"
 BIPED_DEPS_PATH="$BIPED_DOWNLOADS_PATH/$BIPED_DEPS_FILENAME"
+
+INTELREALSENSE_URL="https://github.com/IntelRealSense/librealsense/archive/refs/tags/"
+INTELREALSENSE_FILENAME="v2.53.1.tar.gz"
+INTELREALSENSE_PATH="$BIPED_DOWNLOADS_PATH/$INTELREALSENSE_FILENAME"
+
 BIPED_WIFI_PROFILES_PATH="biped/wifi_profiles"
 
 echob () {
@@ -21,11 +26,24 @@ biped_build_rootfs() {
         echob "Biped deps already downloaded, skipping download"
     fi
 
+    # download to downloads/biped if file not exist, INTELREALSENSE_PATH
+    if [ ! -f "$INTELREALSENSE_PATH" ]; then
+        echob "Downloading intel realsense to $INTELREALSENSE_PATH"
+        wget $INTELREALSENSE_URL$INTELREALSENSE_FILENAME -O $INTELREALSENSE_PATH
+    else
+        echob "Intel realsense already downloaded, skipping download"
+    fi
+
     # unpack to $ROOTFS_TEMP/tmp/reqs
     echob "Unpacking biped deps to $ROOTFS_TEMP/tmp/biped/"
     mkdir -p $ROOTFS_TEMP/tmp/biped/
     tar -xzf $BIPED_DEPS_PATH -C $ROOTFS_TEMP/tmp/biped/
     echob "Unpacking biped deps done"
+
+    # unpack to $ROOTFS_TEMP/tmp/reqs
+    echob "Unpacking intel realsense to $ROOTFS_TEMP/tmp/biped/reqs/"
+    tar -xzf $INTELREALSENSE_PATH -C $ROOTFS_TEMP/tmp/biped/reqs/
+    echob "Unpacking intel realsense done"
 
     # setup wifi
     echob "Setting up wifi"
