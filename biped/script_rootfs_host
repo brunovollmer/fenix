@@ -3,18 +3,34 @@
 BIPED_DOWNLOADS_PATH="downloads/biped"
 BIPED_DEPS_FILENAME="biped_deps_4_11.tar.gz"
 BIPED_DEPS_PATH="$BIPED_DOWNLOADS_PATH/$BIPED_DEPS_FILENAME"
+BIPED_WIFI_PROFILES_PATH="biped/wifi_profiles"
+
+echob () {
+    echo "==BIPED-HOST==" $@
+}
 
 biped_build_rootfs() {
     mkdir -p $BIPED_DOWNLOADS_PATH
 
     # download to downloads/biped if file not exist, BIPED_DEPS_PATH
     if [ ! -f "$BIPED_DEPS_PATH" ]; then
-        echo "Downloading biped deps to $BIPED_DEPS_PATH"
+        echob "Downloading biped deps to $BIPED_DEPS_PATH"
         wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1ks1kmslXE16RT66-YMsJckmC23CRGOU8' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1ks1kmslXE16RT66-YMsJckmC23CRGOU8" -O $BIPED_DEPS_PATH && rm -rf /tmp/cookies.txt
+        echob "Downloading biped deps done"
+    else
+        echob "Biped deps already downloaded, skipping download"
     fi
 
     # unpack to $ROOTFS_TEMP/tmp/reqs
-    echo "Unpacking biped deps to $ROOTFS_TEMP/tmp/biped/"
+    echob "Unpacking biped deps to $ROOTFS_TEMP/tmp/biped/"
     mkdir -p $ROOTFS_TEMP/tmp/biped/
     tar -xzf $BIPED_DEPS_PATH -C $ROOTFS_TEMP/tmp/biped/
+    echob "Unpacking biped deps done"
+
+    # setup wifi
+    echob "Setting up wifi"
+    cp -r $BIPED_WIFI_PROFILES_PATH/*.nmconnection $ROOTFS_TEMP/etc/NetworkManager/system-connections/
+    sudo chmod -R 600 $ROOTFS_TEMP/etc/NetworkManager/system-connections/
+    sudo chown -R root:root $ROOTFS_TEMP/etc/NetworkManager/system-connections/
+    echob "Wifi setup done"
 }

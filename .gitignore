@@ -33,3 +33,7 @@
 /easy_setup_target/
 
 /*.patch
+
+# Wifi profiles (for security reasons)
+/biped/wifi_profiles/*
+!/biped/wifi_profiles/README.md
