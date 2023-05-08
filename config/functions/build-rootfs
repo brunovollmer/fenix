@@ -671,6 +671,10 @@ build_rootfs() {
 	chroot $ROOTFS_TEMP/ bash "/tmp/${POST_SCRIPT_BIPED##*/}"
 	echo "==BIPED== finished chroot script"
 
+	echo "==BIPED== starting biped postbuild"
+	biped_postbuild_rootfs
+	echo "==BIPED== finished biped postbuild"
+
 	## Logo
 	#[ "$KHADAS_BOARD" = "Generic" ] || \
 	#	cp archives/logo/${VENDOR}/logo.img $BUILD_IMAGES

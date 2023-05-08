@@ -4,6 +4,10 @@ BIPED_DOWNLOADS_PATH="downloads/biped"
 BIPED_DEPS_FILENAME="biped_deps_4_11.tar.gz"
 BIPED_DEPS_PATH="$BIPED_DOWNLOADS_PATH/$BIPED_DEPS_FILENAME"
 
+BIPED_BUILD_PATH="build/biped"
+BIPED_BUILD_DEPS_FILENAME="build_reqs.tar.gz"
+BIPED_BUILD_DEPS_PATH="$BIPED_BUILD_PATH/$BIPED_BUILD_DEPS_FILENAME"
+
 INTELREALSENSE_URL="https://github.com/IntelRealSense/librealsense/archive/refs/tags/"
 INTELREALSENSE_FILENAME="v2.53.1.tar.gz"
 INTELREALSENSE_PATH="$BIPED_DOWNLOADS_PATH/$INTELREALSENSE_FILENAME"
@@ -16,6 +20,7 @@ echob () {
 
 biped_build_rootfs() {
     mkdir -p $BIPED_DOWNLOADS_PATH
+    mkdir -p $BIPED_BUILD_PATH
 
     # download to downloads/biped if file not exist, BIPED_DEPS_PATH
     if [ ! -f "$BIPED_DEPS_PATH" ]; then
@@ -51,4 +56,43 @@ biped_build_rootfs() {
     sudo chmod -R 600 $ROOTFS_TEMP/etc/NetworkManager/system-connections/
     sudo chown -R root:root $ROOTFS_TEMP/etc/NetworkManager/system-connections/
     echob "Wifi setup done"
+
+    # unpack $BIPED_BUILD_DEPS_PATH if exist in $ROOTFS_TEMP/tmp/build_reqs
+    if [ -f "$BIPED_BUILD_DEPS_PATH" ]; then
+        echob "Unpacking biped build deps to $ROOTFS_TEMP/tmp/biped/"
+        tar -xzf $BIPED_BUILD_DEPS_PATH -C $ROOTFS_TEMP/tmp/biped/
+        echob "Unpacking biped build deps done"
+    else
+        echob "Biped build deps not found, skipping unpacking"
+    fi
+
+    # downloading cmake
+    echob "Downloading cmake"
+    mkdir -p $ROOTFS_TEMP/tmp/biped/reqs/cmake
+    wget http://ftp.de.debian.org/debian/pool/main/libj/libjsoncpp/libjsoncpp24_1.9.4-4_arm64.deb -O $ROOTFS_TEMP/tmp/biped/reqs/cmake/libjsoncpp24_1.9.4-4_arm64.deb
+    wget http://ftp.de.debian.org/debian/pool/main/c/cmake/cmake-data_3.18.4-2+deb11u1_all.deb -O $ROOTFS_TEMP/tmp/biped/reqs/cmake/cmake-data_3.18.4-2+deb11u1_all.deb
+    wget http://ftp.de.debian.org/debian/pool/main/c/cmake/cmake_3.18.4-2+deb11u1_arm64.deb -O $ROOTFS_TEMP/tmp/biped/reqs/cmake/cmake_3.18.4-2+deb11u1_arm64.deb
+    wget http://ftp.de.debian.org/debian/pool/main/r/rhash/librhash0_1.3.8-1_arm64.deb -O $ROOTFS_TEMP/tmp/biped/reqs/cmake/librhash0_1.3.8-1_arm64.deb
+    echob "Downloading cmake done"
+}
+
+biped_postbuild_rootfs() {
+    # pack $ROOTFS_TEMP/tmp/build_reqs to $BIPED_BUILD_DEPS_PATH
+    echob "Packing biped build deps to $BIPED_BUILD_DEPS_PATH"
+    mkdir -p $BIPED_BUILD_PATH
+    if [ -f "$BIPED_BUILD_DEPS_PATH" ]; then
+        echob "Removing old biped build deps"
+        rm -f $BIPED_BUILD_DEPS_PATH
+    fi
+    cd $ROOTFS_TEMP/tmp/biped/
+    tar -czf $BIPED_BUILD_DEPS_FILENAME build_reqs
+    cd ${ROOT}
+    mv $ROOTFS_TEMP/tmp/biped/$BIPED_BUILD_DEPS_FILENAME $BIPED_BUILD_PATH
+    echob "Packing biped build deps done"
+
+    rm -rf $ROOTFS_TEMP/home/khadas/reqs
+    echob "Cleaning up $ROOTFS_TEMP/tmp/biped/build_reqs/"
+    rm -rf $ROOTFS_TEMP/tmp/build_reqs/
+    echob "Cleaning up $ROOTFS_TEMP/tmp/biped/reqs/"
+    rm -rf $ROOTFS_TEMP/tmp/biped/
 }
