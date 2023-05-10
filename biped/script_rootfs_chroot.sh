@@ -118,8 +118,8 @@ install_virtual_env() {
     
     mkdir -p /opt/biped/venv/
     cd /opt/biped/venv
-    python3.8 -m venv venv-copilot
-    source venv-copilot/bin/activate
+    python3.8 -m venv biped-copilot
+    source biped-copilot/bin/activate
 
     # for logging, should show 3.8.15
     echob "Virtualenv python version: "
@@ -160,6 +160,10 @@ install_librealsense() {
     yes | bash -e ./scripts/setup_udev_rules.sh
     cd ./build/
     make install
+    
+    # the init of the pyrealsense2 package is not exposed
+    sudo cp /home/khadas/$PACKAGE/wrappers/python/pyrealsense2/__init__.py /opt/biped/venv/biped-copilot/lib/python3.8/site-packages/pyrealsense2/
+    
     cp -r /home/khadas/$PACKAGE /tmp/biped/build_reqs/
     cd /home
     rm -rf /home/khadas/$PACKAGE
