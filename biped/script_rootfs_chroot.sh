@@ -11,7 +11,7 @@ esac
 echob () {
     echo "==BIPED-CHROOT==" $@
     # echo in stderr too for debug
-    echo "==BIPED-CHROOT==" $@ >&2
+    # echo "==BIPED-CHROOT==" $@ >&2
 }
 
 # create a function is_directory_exist to check if directory exist
@@ -116,10 +116,10 @@ install_virtual_env() {
     echob "Installing virtualenv"
     python3.8 -m pip install --user virtualenv
     
-    mkdir -p /opt/biped/
-    cd /opt/biped/
+    mkdir -p /opt/biped/venv/
+    cd /opt/biped/venv
     python3.8 -m venv venv-copilot
-    source env/bin/activate
+    source venv-copilot/bin/activate
 
     # for logging, should show 3.8.15
     echob "Virtualenv python version: "

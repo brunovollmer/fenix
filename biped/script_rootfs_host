@@ -77,8 +77,8 @@ biped_build_rootfs() {
 
     echob "Cloning biped repo"
     mkdir -p $ROOTFS_TEMP/opt/biped/
-    cd $ROOTFS_TEMP/opt/biped/
-    git clone --depth 1 --branch 1.2.0-dev git@github.com:bipedai/copilot.git
+    git clone --depth 1 --branch 1.2.0-dev git@github.com:bipedai/copilot.git $ROOTFS_TEMP/opt/biped/copilot
+    echob "Cloning biped repo done"
 }
 
 biped_postbuild_rootfs() {
