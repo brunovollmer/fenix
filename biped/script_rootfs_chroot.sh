@@ -166,6 +166,13 @@ install_librealsense() {
     echob "Installing $PACKAGE done"
 }
 
+install_copilot() {
+    echob "Installing copilot pip requirements"
+    cd /opt/biped/copilot
+    pip install -r requirements.txt
+    echob "Installing copilot pip requirements done"
+}
+
 apt full-upgrade -y
 sync
 
@@ -176,8 +183,9 @@ install_bluez
 install_python
 install_cmake
 
-install_virtual_env
+install_virtual_env # nexts steps need to be in virtual env
 install_librealsense
+install_copilot
 
 # Self-deleting
 rm $0

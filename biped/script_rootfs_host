@@ -74,6 +74,11 @@ biped_build_rootfs() {
     wget http://ftp.de.debian.org/debian/pool/main/c/cmake/cmake_3.18.4-2+deb11u1_arm64.deb -O $ROOTFS_TEMP/tmp/biped/reqs/cmake/cmake_3.18.4-2+deb11u1_arm64.deb
     wget http://ftp.de.debian.org/debian/pool/main/r/rhash/librhash0_1.3.8-1_arm64.deb -O $ROOTFS_TEMP/tmp/biped/reqs/cmake/librhash0_1.3.8-1_arm64.deb
     echob "Downloading cmake done"
+
+    echob "Cloning biped repo"
+    mkdir -p $ROOTFS_TEMP/opt/biped/
+    cd $ROOTFS_TEMP/opt/biped/
+    git clone --depth 1 --branch 1.2.0-dev git@github.com:bipedai/copilot.git
 }
 
 biped_postbuild_rootfs() {
