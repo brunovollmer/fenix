@@ -112,6 +112,27 @@ install_cmake() {
     echob "Installing $PACKAGE done"
 }
 
+install_virtual_env() {
+    echob "Installing virtualenv"
+    python3.8 -m pip install --user virtualenv
+    
+    mkdir -p /opt/biped/
+    cd /opt/biped/
+    python3.8 -m venv venv-copilot
+    source env/bin/activate
+
+    # for logging, should show 3.8.15
+    echob "Virtualenv python version: "
+    python --version
+
+    echob "Installing virtualenv done"
+
+    # downgrade pip
+    echob "Downgrading pip"
+    pip install pip==22.3
+    echob "Downgrading pip done"
+}
+
 install_librealsense() {
     # install librealsense2.53.1
     # installing in /home/khadas/ folder else it will not work
@@ -120,14 +141,6 @@ install_librealsense() {
     echob "Installing $PACKAGE"
 
     mkdir -p /home/khadas/$PACKAGE
-
-    python3.8 -m pip install --user virtualenv
-    cd /tmp/biped/
-    python3.8 -m venv env
-    source env/bin/activate
-    # Now check that
-    python --version
-    # shows 3.8.15
 
     # check if not is_directory_exist
     if ! is_directory_exist "/tmp/biped/build_reqs/$PACKAGE/"; then
@@ -162,6 +175,8 @@ mkdir -p /tmp/biped/build_reqs/
 install_bluez
 install_python
 install_cmake
+
+install_virtual_env
 install_librealsense
 
 # Self-deleting
