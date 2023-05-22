@@ -23,6 +23,13 @@ is_directory_exist() {
     fi
 }
 
+setup_script() {
+    echob "Allowing execution of startup script"
+    chmod +x /usr/local/bin/start_script.sh
+    systemctl enable start_script.service
+    echob "Allowing execution of startup script done"
+}
+
 install_bluez() {
     # upgrade bluetooth
     PACKAGE="bluez-5.65"
@@ -183,13 +190,14 @@ sync
 ln -s /tmp/biped/reqs /home/khadas/reqs
 mkdir -p /tmp/biped/build_reqs/
 
+setup_script
 install_bluez
-install_python
-install_cmake
+# install_python
+# install_cmake
 
-install_virtual_env # nexts steps need to be in virtual env
-install_librealsense
-install_copilot
+# install_virtual_env # nexts steps need to be in virtual env
+# install_librealsense
+# install_copilot
 
 # Self-deleting
 rm $0

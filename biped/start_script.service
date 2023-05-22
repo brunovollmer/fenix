@@ -1,0 +1,9 @@
+[Unit]
+Description=Start Script
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/start_script.sh
+
+[Install]
+WantedBy=default.target

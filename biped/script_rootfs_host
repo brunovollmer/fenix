@@ -14,6 +14,12 @@ INTELREALSENSE_PATH="$BIPED_DOWNLOADS_PATH/$INTELREALSENSE_FILENAME"
 
 BIPED_WIFI_PROFILES_PATH="biped/wifi_profiles"
 
+BIPED_STARTUP_SCRIPT_FILENAME="start_script.sh"
+BIPED_STARTUP_SERVICE_FILENAME="start_script.service"
+BIPED_SCRIPTS_PATH="biped"
+BIPED_STARTUP_SCRIPT_PATH="$BIPED_SCRIPTS_PATH/$BIPED_STARTUP_SCRIPT_FILENAME"
+BIPED_STARTUP_SERVICE_PATH="$BIPED_SCRIPTS_PATH/$BIPED_STARTUP_SERVICE_FILENAME"
+
 echob () {
     echo "==BIPED-HOST==" $@
 }
@@ -79,6 +85,18 @@ biped_build_rootfs() {
     mkdir -p $ROOTFS_TEMP/opt/biped/
     git clone --depth 1 --branch 1.2.0-dev git@github.com:bipedai/copilot.git $ROOTFS_TEMP/opt/biped/copilot
     echob "Cloning biped repo done"
+
+    # copy startup script to $ROOTFS_TEMP/etc/init.d/
+    echob "Copying startup script to $ROOTFS_TEMP/usr/local/bin/"
+    cp $BIPED_STARTUP_SCRIPT_PATH $ROOTFS_TEMP/usr/local/bin/$BIPED_STARTUP_SCRIPT_FILENAME
+    # add execution permission to startup script
+    sudo chmod +x $ROOTFS_TEMP/usr/local/bin/$BIPED_STARTUP_SCRIPT_FILENAME
+    echob "Copying startup script done"
+
+    # copy startup service to $ROOTFS_TEMP/etc/systemd/system/
+    echob "Copying startup service to $ROOTFS_TEMP/etc/systemd/system/"
+    cp $BIPED_STARTUP_SERVICE_PATH $ROOTFS_TEMP/etc/systemd/system/
+    echob "Copying startup service done"
 }
 
 biped_postbuild_rootfs() {
