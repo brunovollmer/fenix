@@ -192,12 +192,12 @@ mkdir -p /tmp/biped/build_reqs/
 
 setup_script
 install_bluez
-# install_python
-# install_cmake
+install_python
+install_cmake
 
-# install_virtual_env # nexts steps need to be in virtual env
-# install_librealsense
-# install_copilot
+install_virtual_env # nexts steps need to be in virtual env
+install_librealsense
+install_copilot
 
 # Self-deleting
 rm $0
