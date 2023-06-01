@@ -8,6 +8,8 @@ case $(readlink /proc/self/cwd) in
     ;;
 esac
 
+
+
 echob () {
     echo "==BIPED-CHROOT==" $@
     # echo in stderr too for debug
@@ -155,7 +157,7 @@ install_librealsense() {
         cd /home/khadas/$PACKAGE
         echob "$PACKAGE is not already built, building now"
         mkdir build && cd build
-        /usr/bin/cmake ../ -DBUILD_PYTHON_BINDINGS:bool=true -DFORCE_RSUSB_BACKEND:bool=true -DBUILD_WITH_CUDA:bool=false -DBUILD_GRAPHICAL_EXAMPLES:bool=false -DCMAKE_BUILD_TYPE=release
+        /usr/bin/cmake ../ -DBUILD_PYTHON_BINDINGS:bool=true -DFORCE_RSUSB_BACKEND:bool=true -DBUILD_WITH_CUDA:bool=false -DBUILD_GRAPHICAL_EXAMPLES:bool=false -DCMAKE_BUILD_TYPE=release -DPYTHON_EXECUTABLE=/usr/local/bin/python3.8 -DPYTHON_LIBRARY=/usr/local/lib/libpython3.8.so -DPYTHON_INCLUDE_DIR=/usr/local/include/python3.8
         make -j8
     else
         echob "$PACKAGE is already built, skipping build"
@@ -169,8 +171,10 @@ install_librealsense() {
     make install
     
     # the init of the pyrealsense2 package is not exposed
-    sudo cp /home/khadas/$PACKAGE/wrappers/python/pyrealsense2/__init__.py /opt/biped/venv/biped-copilot/lib/python3.8/site-packages/pyrealsense2/
-    
+    #DEV: sudo cp /home/khadas/$PACKAGE/wrappers/python/pyrealsense2/__init__.py /opt/biped/venv/biped-copilot/lib/python3.8/site-packages/pyrealsense2/
+    mkdir -p /usr/local/lib/python3.8/site-packages/pyrealsense2/
+    cp /home/khadas/$PACKAGE/wrappers/python/pyrealsense2/__init__.py /usr/local/lib/python3.8/site-packages/pyrealsense2/
+
     cp -r /home/khadas/$PACKAGE /tmp/biped/build_reqs/
     cd /home
     rm -rf /home/khadas/$PACKAGE
@@ -195,9 +199,12 @@ install_bluez
 install_python
 install_cmake
 
-install_virtual_env # nexts steps need to be in virtual env
+#install_virtual_env # only in dev mode
 install_librealsense
-install_copilot
+#install_copilot
 
 # Self-deleting
 rm $0
+
+## dev and prod mode
+## don't install copilot manually, use deb file in github
