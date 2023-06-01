@@ -20,11 +20,29 @@ BIPED_SCRIPTS_PATH="biped"
 BIPED_STARTUP_SCRIPT_PATH="$BIPED_SCRIPTS_PATH/$BIPED_STARTUP_SCRIPT_FILENAME"
 BIPED_STARTUP_SERVICE_PATH="$BIPED_SCRIPTS_PATH/$BIPED_STARTUP_SERVICE_FILENAME"
 
+BIPED_CONFIG_PATH="biped/biped_config"
+BIPED_CONFIG_DEFAULT_PATH="$BIPED_CONFIG_PATH.default"
+
 echob () {
     echo "==BIPED-HOST==" $@
 }
 
+# test if config file exist, if not copy default config file
+if [ ! -f "$BIPED_CONFIG_PATH" ]; then
+    echob "Copying default config file into biped/"
+    cp $BIPED_CONFIG_DEFAULT_PATH $BIPED_CONFIG_PATH
+fi
+source $BIPED_CONFIG_PATH
+
 biped_build_rootfs() {
+    if [ "$BIPED_FENIX_BUILD_TYPE" = "dev" ]; then
+        echob "Running host script in development mode"
+    elif [ "$BIPED_FENIX_BUILD_TYPE" = "prod" ]; then
+        echob "Running host script in production mode"
+    else
+        echob "Running host script in unknown mode (should be dev or prod, found $BIPED_FENIX_BUILD_TYPE)"
+    fi
+
     mkdir -p $BIPED_DOWNLOADS_PATH
     mkdir -p $BIPED_BUILD_PATH
 
@@ -81,10 +99,13 @@ biped_build_rootfs() {
     wget http://ftp.de.debian.org/debian/pool/main/r/rhash/librhash0_1.3.8-1_arm64.deb -O $ROOTFS_TEMP/tmp/biped/reqs/cmake/librhash0_1.3.8-1_arm64.deb
     echob "Downloading cmake done"
 
-    echob "Cloning biped repo"
-    mkdir -p $ROOTFS_TEMP/opt/biped/
-    git clone --depth 1 --branch 1.2.0-dev git@github.com:bipedai/copilot.git $ROOTFS_TEMP/opt/biped/copilot
-    echob "Cloning biped repo done"
+    if [ "$BIPED_FENIX_BUILD_TYPE" = "dev" ]; then
+        # cloning biped repo
+        echob "Cloning biped repo"
+        mkdir -p $ROOTFS_TEMP/opt/biped/
+        git clone --depth 1 --branch 1.2.0-dev git@github.com:bipedai/copilot.git $ROOTFS_TEMP/opt/biped/copilot
+        echob "Cloning biped repo done"
+    fi
 
     # copy startup script to $ROOTFS_TEMP/etc/init.d/
     echob "Copying startup script to $ROOTFS_TEMP/usr/local/bin/"
@@ -97,6 +118,11 @@ biped_build_rootfs() {
     echob "Copying startup service to $ROOTFS_TEMP/etc/systemd/system/"
     cp $BIPED_STARTUP_SERVICE_PATH $ROOTFS_TEMP/etc/systemd/system/
     echob "Copying startup service done"
+
+    # copy config file into $ROOTFS_TEMP/etc/biped/
+    echob "Copying config file into $ROOTFS_TEMP/tmp/biped/"
+    cp $BIPED_CONFIG_PATH $ROOTFS_TEMP/tmp/biped/biped_config
+    echob "Copying config file done"
 }
 
 biped_postbuild_rootfs() {

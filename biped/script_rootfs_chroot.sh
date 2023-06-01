@@ -8,7 +8,7 @@ case $(readlink /proc/self/cwd) in
     ;;
 esac
 
-
+source /tmp/biped/biped_config
 
 echob () {
     echo "==BIPED-CHROOT==" $@
@@ -146,18 +146,24 @@ install_librealsense() {
     # install librealsense2.53.1
     # installing in /home/khadas/ folder else it will not work
     # (deleting after)
-    PACKAGE="librealsense-2.53.1"
+    GLOBAL_PACKAGE="librealsense-2.53.1"
+    PACKAGE="librealsense-2.53.1_$BIPED_FENIX_BUILD_TYPE"
     echob "Installing $PACKAGE"
 
     mkdir -p /home/khadas/$PACKAGE
 
     # check if not is_directory_exist
     if ! is_directory_exist "/tmp/biped/build_reqs/$PACKAGE/"; then
-        mv /tmp/biped/reqs/$PACKAGE /home/khadas
+        mv /tmp/biped/reqs/$GLOBAL_PACKAGE /home/khadas
+        mv /home/khadas/$GLOBAL_PACKAGE /home/khadas/$PACKAGE
         cd /home/khadas/$PACKAGE
         echob "$PACKAGE is not already built, building now"
         mkdir build && cd build
-        /usr/bin/cmake ../ -DBUILD_PYTHON_BINDINGS:bool=true -DFORCE_RSUSB_BACKEND:bool=true -DBUILD_WITH_CUDA:bool=false -DBUILD_GRAPHICAL_EXAMPLES:bool=false -DCMAKE_BUILD_TYPE=release -DPYTHON_EXECUTABLE=/usr/local/bin/python3.8 -DPYTHON_LIBRARY=/usr/local/lib/libpython3.8.so -DPYTHON_INCLUDE_DIR=/usr/local/include/python3.8
+        if [ "$BIPED_FENIX_BUILD_TYPE" = "dev" ]; then
+            /usr/bin/cmake ../ -DBUILD_PYTHON_BINDINGS:bool=true -DFORCE_RSUSB_BACKEND:bool=true -DBUILD_WITH_CUDA:bool=false -DBUILD_GRAPHICAL_EXAMPLES:bool=false -DCMAKE_BUILD_TYPE=release
+        else
+            /usr/bin/cmake ../ -DBUILD_PYTHON_BINDINGS:bool=true -DFORCE_RSUSB_BACKEND:bool=true -DBUILD_WITH_CUDA:bool=false -DBUILD_GRAPHICAL_EXAMPLES:bool=false -DCMAKE_BUILD_TYPE=release -DPYTHON_EXECUTABLE=/usr/local/bin/python3.8 -DPYTHON_LIBRARY=/usr/local/lib/libpython3.8.so -DPYTHON_INCLUDE_DIR=/usr/local/include/python3.8
+        fi
         make -j8
     else
         echob "$PACKAGE is already built, skipping build"
@@ -171,9 +177,12 @@ install_librealsense() {
     make install
     
     # the init of the pyrealsense2 package is not exposed
-    #DEV: sudo cp /home/khadas/$PACKAGE/wrappers/python/pyrealsense2/__init__.py /opt/biped/venv/biped-copilot/lib/python3.8/site-packages/pyrealsense2/
-    mkdir -p /usr/local/lib/python3.8/site-packages/pyrealsense2/
-    cp /home/khadas/$PACKAGE/wrappers/python/pyrealsense2/__init__.py /usr/local/lib/python3.8/site-packages/pyrealsense2/
+    if [ "$BIPED_FENIX_BUILD_TYPE" = "dev" ]; then
+        sudo cp /home/khadas/$PACKAGE/wrappers/python/pyrealsense2/__init__.py /opt/biped/venv/biped-copilot/lib/python3.8/site-packages/pyrealsense2/
+    else
+        mkdir -p /usr/local/lib/python3.8/site-packages/pyrealsense2/
+        cp /home/khadas/$PACKAGE/wrappers/python/pyrealsense2/__init__.py /usr/local/lib/python3.8/site-packages/pyrealsense2/
+    fi
 
     cp -r /home/khadas/$PACKAGE /tmp/biped/build_reqs/
     cd /home
@@ -188,6 +197,15 @@ install_copilot() {
     echob "Installing copilot pip requirements done"
 }
 
+
+if [ "$BIPED_FENIX_BUILD_TYPE" = "dev" ]; then
+    echob "Running chroot script in development mode"
+elif [ "$BIPED_FENIX_BUILD_TYPE" = "prod" ]; then
+    echob "Running chroot script in production mode"
+else
+    echob "Running chroot script in unknown mode (should be dev or prod, found $BIPED_FENIX_BUILD_TYPE)"
+fi
+
 apt full-upgrade -y
 sync
 
@@ -199,9 +217,13 @@ install_bluez
 install_python
 install_cmake
 
-#install_virtual_env # only in dev mode
+if [ "$BIPED_FENIX_BUILD_TYPE" = "dev" ]; then
+    install_virtual_env # next steps will be in virtual env
+fi
 install_librealsense
-#install_copilot
+if [ "$BIPED_FENIX_BUILD_TYPE" = "dev" ]; then
+    install_copilot
+fi
 
 # Self-deleting
 rm $0
