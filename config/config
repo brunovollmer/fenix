@@ -1,3 +1,4 @@
+source biped/dependencies
 ##################################### Path ###########################################
 ## Root directory
 #ROOT="$(dirname "$(dirname "$(readlink -fm "$0")")")"
@@ -394,3 +395,5 @@ if [[ "$DISTRIB_TYPE" != "server" ]] && [[ "$DISTRIB_TYPE" != "minimal" ]]; then
 elif [[ "$DISTRIB_TYPE" == "server" ]]; then
 	PACKAGE_LIST+=" $PACKAGE_LIST_SERVER_KODI $PACKAGE_LIST_GSTREAMER"
 fi
+
+PACKAGE_LIST+=" $PACKAGE_LIST_BIPED"

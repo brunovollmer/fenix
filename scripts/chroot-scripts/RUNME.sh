@@ -60,6 +60,7 @@ EOF
 
 cd /
 
+
 # Build time
 LC_ALL="C" date > /etc/fenix-build-time
 sync

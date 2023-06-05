@@ -1,0 +1,147 @@
+# script executed by the host (with ssh access) when the rootfs is mounted
+
+BIPED_DOWNLOADS_PATH="downloads/biped"
+BIPED_DEPS_FILENAME="biped_deps_4_11.tar.gz"
+BIPED_DEPS_PATH="$BIPED_DOWNLOADS_PATH/$BIPED_DEPS_FILENAME"
+
+BIPED_BUILD_PATH="build/biped"
+BIPED_BUILD_DEPS_FILENAME="build_reqs.tar.gz"
+BIPED_BUILD_DEPS_PATH="$BIPED_BUILD_PATH/$BIPED_BUILD_DEPS_FILENAME"
+
+INTELREALSENSE_URL="https://github.com/IntelRealSense/librealsense/archive/refs/tags/"
+INTELREALSENSE_FILENAME="v2.53.1.tar.gz"
+INTELREALSENSE_PATH="$BIPED_DOWNLOADS_PATH/$INTELREALSENSE_FILENAME"
+
+BIPED_WIFI_PROFILES_PATH="biped/wifi_profiles"
+
+BIPED_STARTUP_SCRIPT_FILENAME="start_script.sh"
+BIPED_STARTUP_SERVICE_FILENAME="start_script.service"
+BIPED_SCRIPTS_PATH="biped"
+BIPED_STARTUP_SCRIPT_PATH="$BIPED_SCRIPTS_PATH/$BIPED_STARTUP_SCRIPT_FILENAME"
+BIPED_STARTUP_SERVICE_PATH="$BIPED_SCRIPTS_PATH/$BIPED_STARTUP_SERVICE_FILENAME"
+
+BIPED_CONFIG_PATH="biped/biped_config"
+BIPED_CONFIG_DEFAULT_PATH="$BIPED_CONFIG_PATH.default"
+
+echob () {
+    echo "==BIPED-HOST==" $@
+}
+
+# test if config file exist, if not copy default config file
+if [ ! -f "$BIPED_CONFIG_PATH" ]; then
+    echob "Copying default config file into biped/"
+    cp $BIPED_CONFIG_DEFAULT_PATH $BIPED_CONFIG_PATH
+fi
+source $BIPED_CONFIG_PATH
+
+biped_build_rootfs() {
+    if [ "$BIPED_FENIX_BUILD_TYPE" = "dev" ]; then
+        echob "Running host script in development mode"
+    elif [ "$BIPED_FENIX_BUILD_TYPE" = "prod" ]; then
+        echob "Running host script in production mode"
+    else
+        echob "Running host script in unknown mode (should be dev or prod, found $BIPED_FENIX_BUILD_TYPE)"
+    fi
+
+    mkdir -p $BIPED_DOWNLOADS_PATH
+    mkdir -p $BIPED_BUILD_PATH
+
+    # download to downloads/biped if file not exist, BIPED_DEPS_PATH
+    if [ ! -f "$BIPED_DEPS_PATH" ]; then
+        echob "Downloading biped deps to $BIPED_DEPS_PATH"
+        wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1ks1kmslXE16RT66-YMsJckmC23CRGOU8' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1ks1kmslXE16RT66-YMsJckmC23CRGOU8" -O $BIPED_DEPS_PATH && rm -rf /tmp/cookies.txt
+        echob "Downloading biped deps done"
+    else
+        echob "Biped deps already downloaded, skipping download"
+    fi
+
+    # download to downloads/biped if file not exist, INTELREALSENSE_PATH
+    if [ ! -f "$INTELREALSENSE_PATH" ]; then
+        echob "Downloading intel realsense to $INTELREALSENSE_PATH"
+        wget $INTELREALSENSE_URL$INTELREALSENSE_FILENAME -O $INTELREALSENSE_PATH
+    else
+        echob "Intel realsense already downloaded, skipping download"
+    fi
+
+    # unpack to $ROOTFS_TEMP/tmp/reqs
+    echob "Unpacking biped deps to $ROOTFS_TEMP/tmp/biped/"
+    mkdir -p $ROOTFS_TEMP/tmp/biped/
+    tar -xzf $BIPED_DEPS_PATH -C $ROOTFS_TEMP/tmp/biped/
+    echob "Unpacking biped deps done"
+
+    # unpack to $ROOTFS_TEMP/tmp/reqs
+    echob "Unpacking intel realsense to $ROOTFS_TEMP/tmp/biped/reqs/"
+    tar -xzf $INTELREALSENSE_PATH -C $ROOTFS_TEMP/tmp/biped/reqs/
+    echob "Unpacking intel realsense done"
+
+    # setup wifi
+    echob "Setting up wifi"
+    cp -r $BIPED_WIFI_PROFILES_PATH/*.nmconnection $ROOTFS_TEMP/etc/NetworkManager/system-connections/
+    sudo chmod -R 600 $ROOTFS_TEMP/etc/NetworkManager/system-connections/
+    sudo chown -R root:root $ROOTFS_TEMP/etc/NetworkManager/system-connections/
+    echob "Wifi setup done"
+
+    # unpack $BIPED_BUILD_DEPS_PATH if exist in $ROOTFS_TEMP/tmp/build_reqs
+    if [ -f "$BIPED_BUILD_DEPS_PATH" ]; then
+        echob "Unpacking biped build deps to $ROOTFS_TEMP/tmp/biped/"
+        tar -xzf $BIPED_BUILD_DEPS_PATH -C $ROOTFS_TEMP/tmp/biped/
+        echob "Unpacking biped build deps done"
+    else
+        echob "Biped build deps not found, skipping unpacking"
+    fi
+
+    # downloading cmake
+    echob "Downloading cmake"
+    mkdir -p $ROOTFS_TEMP/tmp/biped/reqs/cmake
+    wget http://ftp.de.debian.org/debian/pool/main/libj/libjsoncpp/libjsoncpp24_1.9.4-4_arm64.deb -O $ROOTFS_TEMP/tmp/biped/reqs/cmake/libjsoncpp24_1.9.4-4_arm64.deb
+    wget http://ftp.de.debian.org/debian/pool/main/c/cmake/cmake-data_3.18.4-2+deb11u1_all.deb -O $ROOTFS_TEMP/tmp/biped/reqs/cmake/cmake-data_3.18.4-2+deb11u1_all.deb
+    wget http://ftp.de.debian.org/debian/pool/main/c/cmake/cmake_3.18.4-2+deb11u1_arm64.deb -O $ROOTFS_TEMP/tmp/biped/reqs/cmake/cmake_3.18.4-2+deb11u1_arm64.deb
+    wget http://ftp.de.debian.org/debian/pool/main/r/rhash/librhash0_1.3.8-1_arm64.deb -O $ROOTFS_TEMP/tmp/biped/reqs/cmake/librhash0_1.3.8-1_arm64.deb
+    echob "Downloading cmake done"
+
+    if [ "$BIPED_FENIX_BUILD_TYPE" = "dev" ]; then
+        # cloning biped repo
+        echob "Cloning biped repo"
+        mkdir -p $ROOTFS_TEMP/opt/biped/
+        git clone --depth 1 --branch 1.2.0-dev git@github.com:bipedai/copilot.git $ROOTFS_TEMP/opt/biped/copilot
+        echob "Cloning biped repo done"
+    fi
+
+    # copy startup script to $ROOTFS_TEMP/etc/init.d/
+    echob "Copying startup script to $ROOTFS_TEMP/usr/local/bin/"
+    cp $BIPED_STARTUP_SCRIPT_PATH $ROOTFS_TEMP/usr/local/bin/$BIPED_STARTUP_SCRIPT_FILENAME
+    # add execution permission to startup script
+    sudo chmod +x $ROOTFS_TEMP/usr/local/bin/$BIPED_STARTUP_SCRIPT_FILENAME
+    echob "Copying startup script done"
+
+    # copy startup service to $ROOTFS_TEMP/etc/systemd/system/
+    echob "Copying startup service to $ROOTFS_TEMP/etc/systemd/system/"
+    cp $BIPED_STARTUP_SERVICE_PATH $ROOTFS_TEMP/etc/systemd/system/
+    echob "Copying startup service done"
+
+    # copy config file into $ROOTFS_TEMP/etc/biped/
+    echob "Copying config file into $ROOTFS_TEMP/tmp/biped/"
+    cp $BIPED_CONFIG_PATH $ROOTFS_TEMP/tmp/biped/biped_config
+    echob "Copying config file done"
+}
+
+biped_postbuild_rootfs() {
+    # pack $ROOTFS_TEMP/tmp/build_reqs to $BIPED_BUILD_DEPS_PATH
+    echob "Packing biped build deps to $BIPED_BUILD_DEPS_PATH"
+    mkdir -p $BIPED_BUILD_PATH
+    if [ -f "$BIPED_BUILD_DEPS_PATH" ]; then
+        echob "Removing old biped build deps"
+        rm -f $BIPED_BUILD_DEPS_PATH
+    fi
+    cd $ROOTFS_TEMP/tmp/biped/
+    tar -czf $BIPED_BUILD_DEPS_FILENAME build_reqs
+    cd ${ROOT}
+    mv $ROOTFS_TEMP/tmp/biped/$BIPED_BUILD_DEPS_FILENAME $BIPED_BUILD_PATH
+    echob "Packing biped build deps done"
+
+    rm -rf $ROOTFS_TEMP/home/khadas/reqs
+    echob "Cleaning up $ROOTFS_TEMP/tmp/biped/build_reqs/"
+    rm -rf $ROOTFS_TEMP/tmp/build_reqs/
+    echob "Cleaning up $ROOTFS_TEMP/tmp/biped/reqs/"
+    rm -rf $ROOTFS_TEMP/tmp/biped/
+}

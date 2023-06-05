@@ -1,0 +1,10 @@
+PACKAGE_LIST_BIPED="build-essential zlib1g-dev libncurses5-dev \
+                    libgdbm-dev libnss3-dev libssl-dev libreadline-dev \
+                    libffi-dev wget libbz2-dev zsh xorg-dev libglu1-mesa-dev \
+                    pulseaudio libbluetooth-dev libglib2.0-dev libopencv-dev \
+                    liblzma-dev libasound2-dev libgirepository1.0-dev libudev-dev \
+                    libical-dev python3-docutils libreadline-dev libusb-1.0-0-dev \
+                    libusb-1.0-doc libasound2-dev libflac-dev libogg-dev libtool \
+                    libvorbis-dev libopus-dev libmp3lame-dev libmpg123-dev libcairo2-dev \
+                    pulseaudio-module-bluetooth python3-venv \
+                    lm-sensors libdbus-1-dev" # new packages needed for edge2

@@ -7,6 +7,8 @@
 # prepare_rootfs
 # build_rootfs
 
+source biped/script_rootfs_host
+
 install_common()
 {
 	# overload
@@ -644,22 +646,39 @@ build_rootfs() {
 	[ "$KHADAS_BOARD" = "Generic" ] || \
 	    cp $UTILS_DIR/mkimage-$DISTRIB_ARCH $ROOTFS_TEMP/usr/local/bin/mkimage
 
+	# setup biped
+
+	echo "==BIPED== setup biped"
+	biped_build_rootfs
+	echo "==BIPED== finished setup biped"
+
 	## script executing on chroot
 
 	[ "$POST_SCRIPT" ] || \
 	    POST_SCRIPT=scripts/chroot-scripts/RUNME.sh
+	POST_SCRIPT_BIPED=biped/script_rootfs_chroot.sh
 
-	cp $POST_SCRIPT $ROOTFS_TEMP/tmp
+	cp $POST_SCRIPT       $ROOTFS_TEMP/tmp
+	cp $POST_SCRIPT_BIPED $ROOTFS_TEMP/tmp
 
 	echo
-	echo "NOTE: ENTER CHROOT AND EXECUTE SCRIPT: $POST_SCRIPT"
+	echo "NOTE: ENTER CHROOT AND EXECUTE SCRIPT: $POST_SCRIPT, $POST_SCRIPT_BIPED"
 	echo
 	mount_chroot "$ROOTFS_TEMP"
 	chroot $ROOTFS_TEMP/ bash "/tmp/${POST_SCRIPT##*/}"
 
+	echo "==BIPED== starting chroot script"
+	chroot $ROOTFS_TEMP/ bash "/tmp/${POST_SCRIPT_BIPED##*/}"
+	echo "==BIPED== finished chroot script"
+
+	echo "==BIPED== starting biped postbuild"
+	biped_postbuild_rootfs
+	echo "==BIPED== finished biped postbuild"
+
 	## Logo
-	[ "$KHADAS_BOARD" = "Generic" ] || \
-		cp archives/logo/${VENDOR}/logo.img $BUILD_IMAGES
+	#[ "$KHADAS_BOARD" = "Generic" ] || \
+	#	cp archives/logo/${VENDOR}/logo.img $BUILD_IMAGES
+	cp archives/logo/biped/logo.img $BUILD_IMAGES
 
 	qemu_helper_deactivate "$ROOTFS_TEMP"
 
